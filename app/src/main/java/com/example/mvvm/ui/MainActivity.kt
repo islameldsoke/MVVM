@@ -28,6 +28,31 @@ class MainActivity : AppCompatActivity() {
         val view = binding.root
         setContentView(view)
 
+        initeAdapter()
+
+
+
+        searchJob?.cancel()
+        fetchRepos()
+
+        if (!repoViewModel.net)
+            Toast.makeText(
+                this,
+                "You aro offline but you can still view Repos",
+                Toast.LENGTH_LONG
+            ).show()
+
+    }
+
+    private fun fetchRepos() {
+        searchJob = lifecycleScope.launch {
+            repoViewModel.repos.collectLatest {
+                repoAdapter.submitData(it)
+            }
+        }
+    }
+
+    private fun initeAdapter() {
         repoAdapter = RepoAdapter()
         val decoration = DividerItemDecoration(this, DividerItemDecoration.VERTICAL)
         binding.rvRepos.layoutManager = LinearLayoutManager(this)
@@ -37,9 +62,6 @@ class MainActivity : AppCompatActivity() {
                 header = ReposLoadStateAdapter { repoAdapter.retry() },
                 footer = ReposLoadStateAdapter { repoAdapter.retry() }
             )
-
-
-
 
         repoAdapter.addLoadStateListener { loadState ->
 
@@ -56,16 +78,5 @@ class MainActivity : AppCompatActivity() {
                 ).show()
             }
         }
-
-
-
-        searchJob?.cancel()
-        searchJob = lifecycleScope.launch{
-            repoViewModel.repos.collectLatest {
-                repoAdapter.submitData(it)
-            }
-        }
-
-        Log.e("dsdsdsd","${repoViewModel.net}")
     }
 }
